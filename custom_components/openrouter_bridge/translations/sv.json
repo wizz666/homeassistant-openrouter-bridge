@@ -1,0 +1,44 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "OpenRouter Bridge",
+        "description": "Skapa en gratis API-nyckel på {openrouter_url}.\n\nFör onboarding utan kostnad, använd en gratis modell:\n`{free_model}`\n\nFör Claude Code med full kapacitet:\n`{claude_model}`",
+        "data": {
+          "api_key": "OpenRouter API-nyckel",
+          "default_model": "Standardmodell",
+          "allow_model_override": "Låt Claude Code välja modell"
+        },
+        "data_description": {
+          "api_key": "Din OpenRouter API-nyckel (sk-or-...)",
+          "default_model": "OpenRouter modell-ID, t.ex. meta-llama/llama-3.3-70b-instruct:free",
+          "allow_model_override": "Om aktiverat används modellen som Claude Code begär istället för standardmodellen"
+        }
+      }
+    },
+    "error": {
+      "invalid_api_key": "Ogiltig API-nyckel. Kontrollera din nyckel på openrouter.ai/keys.",
+      "cannot_connect": "Kunde inte nå OpenRouter. Kontrollera nätverksanslutningen."
+    },
+    "abort": {
+      "already_configured": "OpenRouter Bridge är redan konfigurerad."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "OpenRouter Bridge – Inställningar",
+        "description": "{model_count} modeller tillgängliga på OpenRouter. Lämna API-nyckeln tom för att behålla nuvarande.",
+        "data": {
+          "api_key": "Ny API-nyckel (tom = behåll nuvarande)",
+          "default_model": "Standardmodell",
+          "allow_model_override": "Låt Claude Code välja modell"
+        }
+      }
+    },
+    "error": {
+      "invalid_api_key": "Ogiltig API-nyckel.",
+      "cannot_connect": "Kunde inte nå OpenRouter."
+    }
+  }
+}

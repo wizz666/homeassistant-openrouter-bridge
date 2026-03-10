@@ -1,0 +1,39 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "OpenRouter Bridge",
+        "description": "Create a free API key at {openrouter_url}.\n\nFor onboarding without cost, use a free model like `{free_model}`.\nFor Claude Code with full capabilities, use `{claude_model}`.",
+        "data": {
+          "api_key": "OpenRouter API Key",
+          "default_model": "Default Model (model ID from OpenRouter)",
+          "allow_model_override": "Allow Claude Code to override model selection"
+        }
+      }
+    },
+    "error": {
+      "invalid_api_key": "Invalid API key – check your OpenRouter key.",
+      "cannot_connect": "Cannot connect to OpenRouter. Check your network."
+    },
+    "abort": {
+      "already_configured": "OpenRouter Bridge is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "OpenRouter Bridge – Options",
+        "description": "{model_count} models available. Leave API key empty to keep current.",
+        "data": {
+          "api_key": "New API Key (leave blank to keep current)",
+          "default_model": "Default Model",
+          "allow_model_override": "Allow Claude Code to override model selection"
+        }
+      }
+    },
+    "error": {
+      "invalid_api_key": "Invalid API key.",
+      "cannot_connect": "Cannot connect to OpenRouter."
+    }
+  }
+}

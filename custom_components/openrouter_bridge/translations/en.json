@@ -1,0 +1,44 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "OpenRouter Bridge",
+        "description": "Create a free API key at {openrouter_url}.\n\nFor onboarding without cost, use a free model like:\n`{free_model}`\n\nFor Claude Code with full capabilities:\n`{claude_model}`",
+        "data": {
+          "api_key": "OpenRouter API Key",
+          "default_model": "Default Model",
+          "allow_model_override": "Allow Claude Code to choose model"
+        },
+        "data_description": {
+          "api_key": "Your OpenRouter API key (sk-or-...)",
+          "default_model": "OpenRouter model ID, e.g. meta-llama/llama-3.3-70b-instruct:free",
+          "allow_model_override": "If enabled, the model requested by Claude Code is used instead of the default"
+        }
+      }
+    },
+    "error": {
+      "invalid_api_key": "Invalid API key. Check your OpenRouter key at openrouter.ai/keys.",
+      "cannot_connect": "Could not reach OpenRouter. Check network connectivity."
+    },
+    "abort": {
+      "already_configured": "OpenRouter Bridge is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "OpenRouter Bridge – Settings",
+        "description": "{model_count} models available on OpenRouter. Leave the API key blank to keep the current key.",
+        "data": {
+          "api_key": "New API Key (blank = keep current)",
+          "default_model": "Default Model",
+          "allow_model_override": "Allow Claude Code to choose model"
+        }
+      }
+    },
+    "error": {
+      "invalid_api_key": "Invalid API key.",
+      "cannot_connect": "Could not reach OpenRouter."
+    }
+  }
+}

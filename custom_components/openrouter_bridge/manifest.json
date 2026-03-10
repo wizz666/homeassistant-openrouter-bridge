@@ -1,0 +1,15 @@
+{
+  "domain": "openrouter_bridge",
+  "name": "OpenRouter Bridge",
+  "version": "1.0.0",
+  "description": "Anthropic-compatible API proxy for OpenRouter – use Claude Code CLI with any AI model",
+  "documentation": "https://github.com/wizz666/homeassistant-openrouter-bridge",
+  "issue_tracker": "https://github.com/wizz666/homeassistant-openrouter-bridge/issues",
+  "codeowners": ["@wizz666"],
+  "requirements": [],
+  "dependencies": ["http"],
+  "after_dependencies": [],
+  "config_flow": true,
+  "iot_class": "cloud_polling",
+  "integration_type": "service"
+}
