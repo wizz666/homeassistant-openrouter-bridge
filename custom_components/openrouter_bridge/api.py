@@ -11,6 +11,7 @@ from aiohttp import web
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, OPENROUTER_BASE_URL, DEFAULT_MODEL, STATS_KEY
 
@@ -181,9 +182,18 @@ def _translate_tool_choice(tc: Any) -> Any:
     return "none"
 
 
-def build_openai_request(anthropic_data: dict, model: str, allow_override: bool) -> dict:
+def build_openai_request(
+    anthropic_data: dict, model: str, allow_override: bool, hass: HomeAssistant | None = None
+) -> dict:
     """Build complete OpenAI request dict from Anthropic request dict."""
     effective_model = model
+
+    # Dashboard-modellväljare har högst prioritet
+    if hass is not None:
+        dashboard_model = hass.states.get("input_select.openrouter_bridge_model")
+        if dashboard_model and dashboard_model.state not in ("unknown", "unavailable", ""):
+            effective_model = dashboard_model.state
+
     if allow_override and "model" in anthropic_data:
         effective_model = anthropic_data["model"]
 
@@ -453,7 +463,7 @@ class OpenRouterMessagesView(HomeAssistantView):
         model = entry_data.get("default_model", DEFAULT_MODEL)
         allow_override = entry_data.get("allow_model_override", False)
 
-        oai_request = build_openai_request(data, model, allow_override)
+        oai_request = build_openai_request(data, model, allow_override, self.hass)
         effective_model: str = oai_request["model"]
         is_stream: bool = oai_request.get("stream", False)
 
@@ -464,7 +474,7 @@ class OpenRouterMessagesView(HomeAssistantView):
             "Authorization": f"Bearer {api_key}",
         }
 
-        session = self.hass.helpers.aiohttp_client.async_get_clientsession()
+        session = async_get_clientsession(self.hass)
 
         try:
             if is_stream:
@@ -554,7 +564,7 @@ class OpenRouterModelsView(HomeAssistantView):
         if not api_key:
             return web.json_response({"data": []})
 
-        session = self.hass.helpers.aiohttp_client.async_get_clientsession()
+        session = async_get_clientsession(self.hass)
 
         try:
             async with session.get(

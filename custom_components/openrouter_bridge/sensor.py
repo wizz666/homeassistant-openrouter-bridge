@@ -10,6 +10,7 @@ from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, OPENROUTER_BASE_URL, STATS_KEY
@@ -56,7 +57,7 @@ class OpenRouterCoordinator(DataUpdateCoordinator):
             return {"status": "unconfigured", "model_count": 0, "free_model_count": 0}
 
         try:
-            session = self.hass.helpers.aiohttp_client.async_get_clientsession()
+            session = async_get_clientsession(self.hass)
             async with session.get(
                 f"{OPENROUTER_BASE_URL}/models",
                 headers={"Authorization": f"Bearer {api_key}"},

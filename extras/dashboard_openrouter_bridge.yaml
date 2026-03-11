@@ -1,0 +1,114 @@
+title: OpenRouter Bridge
+views:
+  - title: Claude Code
+    icon: mdi:robot
+    path: claude
+    cards:
+
+      # ── Rubrik ────────────────────────────────────────────────────────────
+      - type: markdown
+        content: >
+          ## 🤖 OpenRouter Bridge
+          Anthropic-kompatibel proxy – kör Claude Code CLI mot valfri AI-modell via OpenRouter.
+
+      # ── Status-rad ────────────────────────────────────────────────────────
+      - type: horizontal-stack
+        cards:
+          - type: entity
+            entity: sensor.openrouter_bridge_status
+            name: Status
+            icon: mdi:api
+
+          - type: entity
+            entity: sensor.openrouter_bridge_total_requests
+            name: Requests
+            icon: mdi:counter
+
+          - type: entity
+            entity: sensor.openrouter_bridge_available_models
+            name: Modeller
+            icon: mdi:robot
+
+          - type: entity
+            entity: sensor.openrouter_bridge_last_used_model
+            name: Senast använd
+            icon: mdi:brain
+
+      # ── Modellväljare ─────────────────────────────────────────────────────
+      - type: entities
+        title: Inställningar
+        icon: mdi:tune
+        entities:
+          - entity: input_select.openrouter_bridge_model
+            name: Aktiv modell
+          - entity: input_text.openrouter_bridge_workspace
+            name: Workspace-mapp
+
+      - type: markdown
+        content: >
+          **Gratis** – välj en `:free`-modell. **Betalt** – välj Claude/Gemini/GPT för bästa Claude Code-upplevelse.
+
+      # ── Inbyggd terminal ──────────────────────────────────────────────────
+      - type: markdown
+        title: "Claude Terminal"
+        content: >
+          Välj modell ovan, klicka sedan **Öppna Terminal** – Claude startar direkt utan konfiguration.
+
+      - type: horizontal-stack
+        cards:
+          - type: button
+            name: Öppna Terminal
+            icon: mdi:console
+            tap_action:
+              action: url
+              url_path: /api/openrouter_bridge/terminal
+
+          - type: button
+            name: OR Activity
+            icon: mdi:chart-line
+            tap_action:
+              action: url
+              url_path: https://openrouter.ai/activity
+
+          - type: button
+            name: OR Credits
+            icon: mdi:credit-card-outline
+            tap_action:
+              action: url
+              url_path: https://openrouter.ai/credits
+
+      # ── Inställningar ─────────────────────────────────────────────────────
+      - type: horizontal-stack
+        cards:
+          - type: button
+            name: Konfigurera integration
+            icon: mdi:cog
+            tap_action:
+              action: navigate
+              navigation_path: /config/integrations/integration/openrouter_bridge
+
+          - type: button
+            name: OpenRouter Keys
+            icon: mdi:key
+            tap_action:
+              action: url
+              url_path: https://openrouter.ai/keys
+
+          - type: button
+            name: OpenRouter Modeller
+            icon: mdi:format-list-bulleted
+            tap_action:
+              action: url
+              url_path: https://openrouter.ai/models
+
+      # ── Protokollinformation ──────────────────────────────────────────────
+      - type: markdown
+        title: API-endpoints
+        content: >
+          | Endpoint | Beskrivning |
+          |----------|-------------|
+          | `POST /api/openrouter_bridge/v1/messages` | Anthropic Messages API (Claude Code) |
+          | `GET /api/openrouter_bridge/v1/models` | Lista tillgängliga modeller |
+          | `GET /api/openrouter_bridge` | Status och info |
+
+          **Aktuell modell styrs av "Välj modell" ovan** – byt utan omstart.

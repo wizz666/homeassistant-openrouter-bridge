@@ -8,8 +8,10 @@ import aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import OpenRouterMessagesView, OpenRouterModelsView, OpenRouterHealthView
+from .terminal import OpenRouterTerminalView, OpenRouterTerminalWSView
 from .const import DOMAIN, OPENROUTER_BASE_URL, STATS_KEY
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_key: str = entry.data.get("api_key", "")
     if api_key:
         try:
-            session = hass.helpers.aiohttp_client.async_get_clientsession()
+            session = async_get_clientsession(hass)
             async with session.get(
                 f"{OPENROUTER_BASE_URL}/models",
                 headers={"Authorization": f"Bearer {api_key}"},
@@ -56,6 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.http.register_view(OpenRouterHealthView(hass))
         hass.http.register_view(OpenRouterMessagesView(hass))
         hass.http.register_view(OpenRouterModelsView(hass))
+        hass.http.register_view(OpenRouterTerminalView(hass))
+        hass.http.register_view(OpenRouterTerminalWSView(hass))
         _VIEWS_REGISTERED = True
         _LOGGER.info(
             "OpenRouter Bridge proxy active at /api/openrouter_bridge – "

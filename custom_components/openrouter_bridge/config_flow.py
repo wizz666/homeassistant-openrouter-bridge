@@ -115,15 +115,14 @@ class OpenRouterBridgeConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Return options flow."""
-        return OpenRouterBridgeOptionsFlow(config_entry)
+        return OpenRouterBridgeOptionsFlow()
 
 
 class OpenRouterBridgeOptionsFlow(OptionsFlow):
     """Options flow for OpenRouter Bridge."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Init."""
-        self.config_entry = config_entry
         self._models: list[str] = []
 
     async def async_step_init(
