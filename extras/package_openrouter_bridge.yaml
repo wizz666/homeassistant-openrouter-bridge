@@ -1,26 +1,38 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # OpenRouter Bridge – Input helpers för dashboard-styrning
 # ─────────────────────────────────────────────────────────────────────────────
+#
+# VIKTIGT: Claude Code kräver tool-use-stöd i modellen (bash, filredigering m.m.)
+#          Modeller utan tool-use stöd ger felmeddelandet "ingen åtkomst/finns inte"
+#
+#   ✅ Fungerar med Claude Code  = stöder tool use
+#   ⚠️  Fungerar EJ              = reasoning-modell eller saknar tool-use
+#
+# Modeller med ":free" kräver inga OpenRouter-credits.
+# Övriga kräver inlagda credits på openrouter.ai/credits
+# ─────────────────────────────────────────────────────────────────────────────
 
 input_select:
   openrouter_bridge_model:
     name: "OpenRouter Bridge – Aktiv modell"
     icon: mdi:brain
     options:
-      # ── Gratis modeller ────────────────────────────────────────────────────
+      # ── Gratis – kräver inga credits ─────────────────────────────────────
+      - "openrouter/free"
       - "meta-llama/llama-3.3-70b-instruct:free"
       - "google/gemma-3-27b-it:free"
-      - "deepseek/deepseek-r1:free"
-      - "mistralai/mistral-7b-instruct:free"
-      # ── Bra betalmodeller ──────────────────────────────────────────────────
+      - "mistralai/mistral-small-3.1-24b-instruct:free"
+      - "nousresearch/hermes-3-llama-3.1-405b:free"
+      # ── Betalmodeller – kräver credits på openrouter.ai/credits ──────────
       - "anthropic/claude-3.5-sonnet"
       - "anthropic/claude-3.5-haiku"
-      - "anthropic/claude-opus-4"
+      - "anthropic/claude-3-opus"
       - "google/gemini-2.0-flash-001"
+      - "google/gemini-2.5-pro-preview-03-25"
       - "openai/gpt-4o"
       - "openai/gpt-4o-mini"
       - "meta-llama/llama-3.3-70b-instruct"
-      - "deepseek/deepseek-r1"
+      - "deepseek/deepseek-chat-v3-0324"
     initial: "meta-llama/llama-3.3-70b-instruct:free"
 
 input_text:

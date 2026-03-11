@@ -2,12 +2,12 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![HA Version](https://img.shields.io/badge/Home%20Assistant-2024.1%2B-blue)](https://www.home-assistant.io)
-[![Version](https://img.shields.io/badge/Version-1.1.0-green)](https://github.com/wizz666/homeassistant-openrouter-bridge/releases)
+[![Version](https://img.shields.io/badge/Version-1.1.1-green)](https://github.com/wizz666/homeassistant-openrouter-bridge/releases)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-Stöd_projektet-F16061?logo=ko-fi&logoColor=white)](https://ko-fi.com/wizz666)
 
 **[🇬🇧 English → README.md](README.md)**
 
-En Anthropic-kompatibel API-proxy byggd direkt i Home Assistant. Peka **Claude Code CLI** (eller valfri Anthropic SDK-klient) mot din HA-instans och använd vilken som helst av OpenRouters 300+ modeller — inklusive gratis sådana. Nu med en **inbyggd webbläsarterminal** så du kan köra Claude Code direkt från din HA-dashboard.
+En Anthropic-kompatibel API-proxy byggd direkt i Home Assistant. Peka **Claude Code CLI** mot din HA-instans och använd valfri av OpenRouters 300+ modeller — inklusive gratis sådana — via en **inbyggd webbläsarterminal** eller från valfri maskin i nätverket.
 
 ---
 
@@ -20,13 +20,12 @@ Claude Code CLI  (eller inbyggd terminal)
     │  POST /api/openrouter_bridge/v1/messages  (Anthropic-format)
     ▼
 Home Assistant – OpenRouter Bridge
-    • Anthropic tool use  →  OpenAI function calling
-    • system-parameter    →  messages[0].role=system
-    • Streaming SSE       →  översätts i realtid
+    • Översätter Anthropic → OpenAI-format i realtid
+    • Väljer aktiv modell från HA-dashboardens dropdown
     │  POST https://openrouter.ai/api/v1/chat/completions
     ▼
-OpenRouter (valfri av 300+ modeller)
-    │  svar översatt tillbaka till Anthropic-format
+OpenRouter (300+ modeller, inklusive gratis)
+    │  Svar översatt tillbaka till Anthropic-format
     ▼
 Claude Code CLI
 ```
@@ -35,16 +34,15 @@ Claude Code CLI
 
 ## Funktioner
 
-- **Anthropic-kompatibelt endpoint** i HA:s egna HTTP-server — inga extra containrar eller portar
-- **Inbyggd webbläsarterminal** — komplett xterm.js-terminal som kör Claude Code direkt i webbläsaren
-- **Modellbyte med ett klick** — byt modell från HA-dashboarden utan att starta om någonting
-- **Full tool use-stöd** — Claude Codes bash-exekvering, filredigering och alla inbyggda verktyg fungerar
-- **Streaming** — token-för-token svar i realtid
-- **Modellistning** — `GET /v1/models` returnerar alla tillgängliga OpenRouter-modeller
-- **300+ modeller** — Claude, Gemini, GPT-4o, Llama, Mistral, DeepSeek med mera
-- **Gratis modeller** — flera kapabla modeller utan kostnad
-- **Användningssensorer** — antal requests, senast använd modell, tillgängliga modeller
-- **Fungerar externt** — åtkomst via din HA externa URL (Nabu Casa eller omvänd proxy)
+- **Anthropic-kompatibelt endpoint** i HA:s egna HTTP-server — inga extra portar eller containrar
+- **Inbyggd webbläsarterminal** — komplett xterm.js-terminal med Claude Code direkt i webbläsaren
+- **Modellbyte med ett klick** — byt modell från HA-dashboardens dropdown, ingen omstart behövs
+- **`openrouter/free` auto-router** — väljer alltid den bäst tillgängliga fria modellen automatiskt
+- **Full tool-use-stöd** — Claude Codes bash-exekvering, filredigering och alla inbyggda verktyg fungerar
+- **Realtidsstreaming** — token-för-token output
+- **Tydliga felmeddelanden** — visar det faktiska OpenRouter-felet (rate limit, fel nyckel, m.m.)
+- **Användningssensorer** — requesträknare, senast använd modell, antal tillgängliga modeller
+- **Fungerar externt** — åtkomst via Nabu Casa eller omvänd proxy
 
 ---
 
@@ -52,7 +50,7 @@ Claude Code CLI
 
 - Home Assistant 2024.1+
 - En OpenRouter API-nyckel — gratis på [openrouter.ai/keys](https://openrouter.ai/keys)
-- **Enbart för inbyggd terminal:** Claude Code CLI-binären kopierad till `/config/claude_bin` (se [Terminalsetup](#terminalsetup))
+- **Enbart för inbyggd terminal:** Claude Code-binären kopierad till `/config/claude_bin` (se [Terminalsetup](#terminalsetup))
 
 ---
 
@@ -68,31 +66,24 @@ Claude Code CLI
 ### Alternativ B – HACS (anpassad repo)
 
 1. I HACS → **Anpassade repositorier** → lägg till `https://github.com/wizz666/homeassistant-openrouter-bridge` som typ **Integration**
-2. Sök efter **OpenRouter Bridge** och installera
-3. Starta om Home Assistant
-4. Lägg till integrationen via **Inställningar → Enheter och tjänster**
+2. Installera **OpenRouter Bridge** och starta om Home Assistant
+3. Lägg till integrationen via **Inställningar → Enheter och tjänster**
 
 ---
 
 ## Konfiguration
 
-Under installationen (eller via **Konfigurera** på integrationskortet) anger du:
-
-| Fält | Beskrivning |
-|------|-------------|
-| **OpenRouter API-nyckel** | Din `sk-or-v1-...`-nyckel från openrouter.ai/keys |
-
-Det är allt. Modellen styrs från dashboarden (se nedan), inte från konfigurationen.
+Vid installation anger du bara din OpenRouter API-nyckel (`sk-or-v1-...`). Aktiv modell styrs från dashboarden, inte från konfigurationen.
 
 ---
 
-## Dashboard & Modellväljare (valfritt men rekommenderat)
+## Dashboard & Modellväljare (Rekommenderat)
 
-Mappen `extras/` innehåller två filer som lägger till en komplett dashboard med modellväljare och terminalknapp.
+Mappen `extras/` innehåller färdiga YAML-filer som lägger till en komplett dashboard med modellväljare och terminalknapp.
 
-### 1 – Lägg till paketet (input-helpers)
+### Steg 1 — Lägg till paketet
 
-Kopiera `extras/package_openrouter_bridge.yaml` till din HA:s `packages/`-mapp (skapa den om den saknas), lägg sedan till i `configuration.yaml`:
+Kopiera `extras/package_openrouter_bridge.yaml` till din `packages/`-mapp (skapa den om den saknas), lägg sedan till i `configuration.yaml`:
 
 ```yaml
 homeassistant:
@@ -101,11 +92,11 @@ homeassistant:
 
 Detta skapar:
 - `input_select.openrouter_bridge_model` — dropdown för att välja aktiv modell
-- `input_text.openrouter_bridge_workspace` — arbetsmappen för terminalsessioner
+- `input_text.openrouter_bridge_workspace` — arbetsmapp för terminalsessioner
 
-### 2 – Lägg till dashboarden
+### Steg 2 — Lägg till dashboarden
 
-Kopiera `extras/dashboard_openrouter_bridge.yaml` till din HA:s `dashboards/`-mapp, lägg sedan till i `configuration.yaml`:
+Kopiera `extras/dashboard_openrouter_bridge.yaml` till din `dashboards/`-mapp, lägg sedan till i `configuration.yaml`:
 
 ```yaml
 lovelace:
@@ -119,85 +110,95 @@ lovelace:
       require_admin: false
 ```
 
-Starta om Home Assistant. En ny **OpenRouter Bridge**-post dyker upp i sidomenyn.
-
-### Dashboardöversikt
-
-Dashboarden innehåller:
-- **Statusrad** — live-sensorer: proxystatus, antal requests, tillgängliga modeller, senast använd modell
-- **Modellväljare** — `input_select`-dropdown för att välja bland de förkonfigurerade modellerna
-- **Workspace-fält** — mappen Claude Code använder som arbetsmapp (standard: `/config/claude_workspace`)
-- **Öppna Terminal**-knapp — öppnar den inbyggda Claude-terminalen i en ny flik
-- **Snabblänkar** — OpenRouter Activity, Credits, Keys, Models
-- **API-endpoint-referens**
+Starta om Home Assistant. **OpenRouter Bridge** syns i sidomenyn.
 
 ---
 
 ## Välja modell
 
-Den aktiva modellen styrs av `input_select.openrouter_bridge_model`. Ändra den i dashboarden och nästa request använder automatiskt den nya modellen — ingen omstart behövs.
+Aktiv modell styrs av `input_select.openrouter_bridge_model`-dropdownen i dashboarden. Byt när som helst — nästa request använder den nya modellen direkt.
 
-Bryggan skickar `--model <vald>` till Claude Code i terminalen och vidarebefordrar modell-ID:t i API-request-headern till OpenRouter.
+> **Öppna alltid en ny terminal-session efter modellbyte** så att `--model`-flaggan som skickas till Claude Code stämmer.
 
-### Förkonfigurerade modeller (redigera `package_openrouter_bridge.yaml` för att lägga till fler)
+### Gratismodeller
 
-**Gratis modeller** (inga OpenRouter-credits behövs):
+Gratis modeller kräver inga OpenRouter-credits. De körs på delad infrastruktur, vilket innebär att de kan vara **temporärt rate-limitade** (HTTP 429) under hög belastning — det är normalt och löser sig av sig självt. Lösningen är att använda `openrouter/free` som automatiskt väljer den fria modell som har kapacitet just nu.
 
 | Modell-ID | Noteringar |
 |-----------|-----------|
-| `meta-llama/llama-3.3-70b-instruct:free` | Bästa gratisalternativet — snabb och kapabel |
-| `google/gemma-3-27b-it:free` | Googles öppna modell |
-| `deepseek/deepseek-r1:free` | Stark resonemangsförmåga, bra för komplexa uppgifter |
-| `mistralai/mistral-7b-instruct:free` | Lättviktig och mycket snabb |
+| **`openrouter/free`** | **Rekommenderat — väljer automatiskt bästa tillgängliga fria modell** |
+| `meta-llama/llama-3.3-70b-instruct:free` | Bästa specifika gratismodellen för Claude Code |
+| `google/gemma-3-27b-it:free` | Bra alternativ |
+| `mistralai/mistral-small-3.1-24b-instruct:free` | Snabb och lättviktig |
+| `nousresearch/hermes-3-llama-3.1-405b:free` | Stark tool-use-modell |
 
-**Betalmodeller** (bästa Claude Code-upplevelsen):
+> ⚠️ **Viktigt:** Claude Code kräver **tool-use-stöd** i modellen (bash, filredigering m.m. körs via function calling). Reasoning-modeller som DeepSeek R1 och o1 stödjer **inte** tool use och kommer att misslyckas. Använd alltid instruct- eller chat-varianter.
+
+### Betalmodeller
+
+Betalmodeller kräver OpenRouter-credits ([openrouter.ai/credits](https://openrouter.ai/credits)). Redan $5 räcker länge med effektiva modeller.
 
 | Modell-ID | Noteringar |
 |-----------|-----------|
 | `anthropic/claude-3.5-sonnet` | Bäst totalt för Claude Code |
 | `anthropic/claude-3.5-haiku` | Snabb och prisvärd |
-| `anthropic/claude-opus-4` | Mest kapabel, högre kostnad |
-| `google/gemini-2.0-flash-001` | Snabb och billig |
+| `anthropic/claude-3-opus` | Mest kapabel Claude 3-modell |
+| `google/gemini-2.0-flash-001` | Snabb och mycket prisvärd |
+| `google/gemini-2.5-pro-preview-03-25` | Senaste Gemini, hög kapabilitet |
 | `openai/gpt-4o` | OpenAIs flaggskepp |
 | `openai/gpt-4o-mini` | Prisvärd GPT-4-klass |
-| `deepseek/deepseek-r1` | Utmärkt resonemangsförmåga, mycket prisvärd |
+| `meta-llama/llama-3.3-70b-instruct` | Bästa open-source betalmodellen |
+| `deepseek/deepseek-chat-v3-0324` | Utmärkt resonemang, mycket prisvärd |
 
-För att lägga till valfri modell från OpenRouters katalog — hitta dess ID på [openrouter.ai/models](https://openrouter.ai/models) och lägg till det i `options:`-listan i `package_openrouter_bridge.yaml`.
+Lägg till valfri modell från OpenRouters katalog på [openrouter.ai/models](https://openrouter.ai/models) i `extras/package_openrouter_bridge.yaml`.
+
+---
+
+## Gratis-tier begränsningar
+
+OpenRouters gratisnivå har dessa gränser:
+
+| Villkor | Requests/dag |
+|---------|-------------|
+| Inga credits någonsin tillagda | ~50 req/dag |
+| Minst lite credits tillagda | ~200 req/dag |
+| Negativt saldo | 0 — HTTP 402 även för gratis-modeller |
+
+Claude Code kan generera många requests per session (varje verktygsanrop är en request). Vid limit, vänta till nästa dag eller lägg till ett litet credits-saldo.
+
+`openrouter/free`-routern väljer automatiskt en modell som **inte är rate-limitad just nu**, vilket ger bäst chans att få ett svar även under topptider.
 
 ---
 
 ## Inbyggd terminal
 
-Integrationen inkluderar en komplett webbläsarbaserad terminal med [xterm.js](https://xtermjs.org/). Klicka på **Öppna Terminal** i dashboarden och Claude Code startar omedelbart — rätt modell skickas automatiskt, ingen shell-konfiguration behövs.
+Klicka på **Öppna Terminal** i dashboarden och Claude Code startar direkt i webbläsaren — vald modell skickas automatiskt, ingen shell-konfiguration behövs.
 
 ### Hur det fungerar
 
 ```
-Webbläsare (xterm.js) ←──WebSocket──→ HA WebSocket-hanterare ←──PTY──→ claude_bin
+Webbläsare (xterm.js) ←── WebSocket ──→ HA PTY-hanterare ←── PTY ──→ /config/claude_bin
 ```
 
-- Webbläsaren ansluter via WebSocket till `/api/openrouter_bridge/terminal/ws`
-- HA startar `claude_bin` i en PTY (pseudo-terminal) med rätt miljövariabler
-- Alla tangenttryckningar går via WebSocket till PTY:n; all output kommer tillbaka på samma väg
-- Terminalstorlek (inklusive fönsterstorleksändringar) vidarebefordras till PTY:n i realtid
-- Aktiv modell från `input_select.openrouter_bridge_model` skickas som `--model <id>`
+- WebSocket ansluter till `/api/openrouter_bridge/terminal/ws`
+- HA startar Claude Code-binären i en PTY med rätt miljövariabler
+- Tangenttryckningar och output flödar via WebSocket i realtid
+- Terminalstorlek vidarebefordras automatiskt till PTY:n
+- Aktiv modell från `input_select.openrouter_bridge_model` skickas som `--model`
 - Workspace från `input_text.openrouter_bridge_workspace` är arbetsmappen
 
 ### Terminalsetup
 
-Terminalen kräver att Claude Code-binären finns tillgänglig inuti HA core-containern. Eftersom Claude Code körs i en separat add-on-container behöver du kopiera binären till den delade `/config/`-volymen en gång:
+Terminalen kräver Claude Code-binären inuti HA core-containern. Kopiera den från Claude Code add-on-containern till den delade `/config/`-volymen:
 
-**Steg 1 — Hitta binären i Claude Code-add-onen:**
-
-Öppna en terminal i Claude Code-add-onen (VS Code Server, SSH, etc.) och kör:
+**Steg 1 — Hitta binären (i Claude Code add-on-terminalen):**
 
 ```bash
 which claude
-# typiskt: /root/.local/share/claude/versions/<version>/claude
-# eller: /usr/local/bin/claude
+# t.ex. /root/.local/share/claude/versions/2.x.x/claude
 ```
 
-**Steg 2 — Kopiera den till den delade volymen:**
+**Steg 2 — Kopiera till delad volym:**
 
 ```bash
 cp $(which claude) /config/claude_bin
@@ -210,34 +211,20 @@ chmod +x /config/claude_bin
 /config/claude_bin --version
 ```
 
-Terminalen hittar den automatiskt på `/config/claude_bin`.
+> Upprepa steg 2 när du uppdaterar Claude Code.
 
-> **OBS:** När du uppdaterar Claude Code, upprepa steg 2 för att hålla binären aktuell.
-
-### Miljövariabler som sätts av terminalen
-
-Terminalen sätter automatiskt dessa när Claude Code startas:
+### Miljövariabler som sätts automatiskt
 
 | Variabel | Värde | Syfte |
 |----------|-------|-------|
-| `ANTHROPIC_BASE_URL` | `http(s)://<din-ha-host>/api/openrouter_bridge` | Pekar Claude mot proxyn |
-| `ANTHROPIC_AUTH_TOKEN` | Din OpenRouter API-nyckel från config entry | Autentisering mot OpenRouter |
+| `ANTHROPIC_BASE_URL` | `http(s)://<din-ha>/api/openrouter_bridge` | Pekar Claude mot proxyn |
+| `ANTHROPIC_AUTH_TOKEN` | Din OpenRouter API-nyckel | Autentisering |
 | `ANTHROPIC_API_KEY` | `""` (tom) | Måste vara tom per OpenRouter-docs |
-| `TERM` | `xterm-256color` | Fullt färgstöd i terminalen |
-
-Ingen manuell miljöinställning behövs — allt konfigureras automatiskt.
-
-### Workspace
-
-Arbetsmappen för terminalsessioner ställs in via `input_text.openrouter_bridge_workspace` (standard: `/config/claude_workspace`). Skapa valfri mapp och ange den här. Varje session startar i den mappen.
-
-En `CLAUDE.md`-fil i workspace-mappen plockas upp av Claude Code som projektinstruktioner. Standard-workspace inkluderar en minimal `CLAUDE.md` för att förhindra att HA:s rot-`/config/CLAUDE.md` laddas.
+| `TERM` | `xterm-256color` | Fullt färgstöd |
 
 ---
 
 ## Claude Code-setup (extern maskin)
-
-För att använda proxyn från en annan maskin i nätverket (inte via den inbyggda terminalen):
 
 ```bash
 export ANTHROPIC_BASE_URL=http://<din-ha-ip>:8123/api/openrouter_bridge
@@ -246,7 +233,7 @@ export ANTHROPIC_API_KEY=
 claude
 ```
 
-Lägg till i din shell-profil (`~/.bashrc`, `~/.zshrc`) för permanent setup:
+Permanent setup i shell-profil (`~/.bashrc`, `~/.zshrc`):
 
 ```bash
 # Claude Code via Home Assistant OpenRouter Bridge
@@ -255,30 +242,25 @@ export ANTHROPIC_AUTH_TOKEN=sk-or-v1-din-openrouter-nyckel
 export ANTHROPIC_API_KEY=
 ```
 
-> **OBS:** Använd `ANTHROPIC_AUTH_TOKEN` (inte `ANTHROPIC_API_KEY`) för OpenRouter per deras [dokumentation](https://openrouter.ai/docs).
+> Använd `ANTHROPIC_AUTH_TOKEN`, inte `ANTHROPIC_API_KEY`, per [OpenRouter-docs](https://openrouter.ai/docs).
 
-**Verifiera att proxyn körs:**
+**Verifiera:**
 ```bash
 curl http://<ha-ip>:8123/api/openrouter_bridge
-```
-Förväntat svar:
-```json
-{"status": "ok", "model": "meta-llama/llama-3.3-70b-instruct:free", "requests": 0}
+# → {"status": "ok", "default_model": "...", "total_requests": 0}
 ```
 
 ---
 
 ## API-endpoints
 
-| Endpoint | Metod | Auth krävs | Beskrivning |
-|----------|-------|------------|-------------|
-| `/api/openrouter_bridge` | GET | Nej | Status, aktuell modell, antal requests |
-| `/api/openrouter_bridge/v1/messages` | POST | Nej | Anthropic Messages API-proxy |
-| `/api/openrouter_bridge/v1/models` | GET | Nej | Alla tillgängliga OpenRouter-modeller |
-| `/api/openrouter_bridge/terminal` | GET | Nej | Inbyggd terminal HTML-sida |
-| `/api/openrouter_bridge/terminal/ws` | WS | Nej | Terminal WebSocket-backend |
-
-Alla endpoints är icke-autentiserade av design — de ligger bakom ditt HA-nätverksperimeter. Om du exponerar externt, använd VPN eller se till att Nabu Casa/omvänd proxy hanterar åtkomstkontroll.
+| Endpoint | Metod | Beskrivning |
+|----------|-------|-------------|
+| `/api/openrouter_bridge` | GET | Status, aktuell modell, antal requests |
+| `/api/openrouter_bridge/v1/messages` | POST | Anthropic Messages API-proxy |
+| `/api/openrouter_bridge/v1/models` | GET | Alla tillgängliga OpenRouter-modeller |
+| `/api/openrouter_bridge/terminal` | GET | Inbyggd terminal HTML-sida |
+| `/api/openrouter_bridge/terminal/ws` | WS | Terminal WebSocket-backend |
 
 ---
 
@@ -295,20 +277,26 @@ Alla endpoints är icke-autentiserade av design — de ligger bakom ditt HA-nät
 
 ## Felsökning
 
-**Terminalen visar "❌ Kunde inte starta claude"**
+**"❌ Kunde inte starta claude" i terminalen**
 → Binären saknas. Följ [Terminalsetup](#terminalsetup) för att kopiera den till `/config/claude_bin`.
 
-**Terminalen ansluter men Claude visar fel modell**
-→ Kontrollera `input_select.openrouter_bridge_model` i dashboarden. Den visade modellen ska matcha vad du valt.
+**`[OpenRouter 429] temporarily rate-limited upstream`**
+→ Den specifika fria modellen är överbelastad just nu. Byt till `openrouter/free` (väljer automatiskt en tillgänglig) eller försök om några minuter.
 
-**"Ogiltig API-nyckel" vid integration-setup**
-→ Kontrollera att du använder en OpenRouter-nyckel (`sk-or-v1-...`), inte en Anthropic-nyckel.
+**`[OpenRouter 402] insufficient credits`**
+→ Ditt kontosaldo är negativt. Lägg till credits på [openrouter.ai/credits](https://openrouter.ai/credits) eller använd bara gratis-modeller med positivt saldo.
 
-**Requests lyckas men jag får generiska/oväntade svar**
-→ Vissa gratismodeller har begränsade kontextfönster eller instruktionsföljning. Prova en annan modell, eller byt till en betalmodell som `anthropic/claude-3.5-sonnet`.
+**Modell svarar inte eller verkar fel**
+→ Se till att du använder en modell med tool-use-stöd. Använd `openrouter/free` eller `meta-llama/llama-3.3-70b-instruct:free` för bäst resultat.
 
-**Proxystatussensorn visar `invalid_key` efter setup**
-→ Ange om din nyckel via **Inställningar → Enheter och tjänster → OpenRouter Bridge → Konfigurera**.
+**Modellbyte verkar inte ha effekt**
+→ Öppna en **ny terminal-session** efter att ha bytt i dropdownen.
+
+**Terminalen ansluter men Claude svarar inte**
+→ Kör `/status` inne i Claude Code för att verifiera `ANTHROPIC_BASE_URL` och auth-token. Kör `/logout` om du tidigare loggat in med Anthropic-credentials.
+
+**Proxystatussensorn visar `invalid_key`**
+→ Ange om nyckeln via **Inställningar → Enheter och tjänster → OpenRouter Bridge → Konfigurera**.
 
 ---
 

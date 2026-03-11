@@ -494,8 +494,29 @@ class OpenRouterMessagesView(HomeAssistantView):
                 ) as upstream:
                     if upstream.status != 200:
                         err = await upstream.text()
-                        _LOGGER.warning("OpenRouter error %s: %s", upstream.status, err[:200])
-                        error_evt = f"event: error\ndata: {json.dumps({'type':'error','error':{'type':'api_error','message':err[:500]}})}\n\n"
+                        _LOGGER.warning("OpenRouter error %s for model %s: %s", upstream.status, effective_model, err[:300])
+                        # Map HTTP status to Anthropic error types so Claude Code shows the real reason
+                        if upstream.status == 404:
+                            err_type = "not_found_error"
+                        elif upstream.status in (401, 403):
+                            err_type = "authentication_error"
+                        elif upstream.status == 402:
+                            err_type = "permission_error"
+                        elif upstream.status == 429:
+                            err_type = "rate_limit_error"
+                        else:
+                            err_type = "api_error"
+                        # Try to extract a readable message from OpenRouter's JSON error
+                        try:
+                            err_json = json.loads(err)
+                            readable = (err_json.get("error", {}).get("message")
+                                        or err_json.get("message")
+                                        or err[:300])
+                        except Exception:
+                            readable = err[:300]
+                        error_evt = (
+                            f"event: error\ndata: {json.dumps({'type':'error','error':{'type':err_type,'message':f'[OpenRouter {upstream.status}] {readable}'}})}\n\n"
+                        )
                         await stream_resp.write(error_evt.encode())
                     else:
                         async for chunk in _stream_translate(upstream, effective_model):
@@ -513,13 +534,30 @@ class OpenRouterMessagesView(HomeAssistantView):
                 ) as upstream:
                     if upstream.status != 200:
                         err = await upstream.text()
-                        _LOGGER.warning("OpenRouter error %s: %s", upstream.status, err[:200])
+                        _LOGGER.warning("OpenRouter error %s for model %s: %s", upstream.status, effective_model, err[:300])
+                        if upstream.status == 404:
+                            err_type = "not_found_error"
+                        elif upstream.status in (401, 403):
+                            err_type = "authentication_error"
+                        elif upstream.status == 402:
+                            err_type = "permission_error"
+                        elif upstream.status == 429:
+                            err_type = "rate_limit_error"
+                        else:
+                            err_type = "api_error"
+                        try:
+                            err_json = json.loads(err)
+                            readable = (err_json.get("error", {}).get("message")
+                                        or err_json.get("message")
+                                        or err[:300])
+                        except Exception:
+                            readable = err[:300]
                         return web.Response(
                             status=upstream.status,
                             content_type="application/json",
                             text=json.dumps({
                                 "type": "error",
-                                "error": {"type": "api_error", "message": err[:500]},
+                                "error": {"type": err_type, "message": f"[OpenRouter {upstream.status}] {readable}"},
                             }),
                         )
                     oai_response = await upstream.json()

@@ -2,31 +2,30 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![HA Version](https://img.shields.io/badge/Home%20Assistant-2024.1%2B-blue)](https://www.home-assistant.io)
-[![Version](https://img.shields.io/badge/Version-1.1.0-green)](https://github.com/wizz666/homeassistant-openrouter-bridge/releases)
+[![Version](https://img.shields.io/badge/Version-1.1.1-green)](https://github.com/wizz666/homeassistant-openrouter-bridge/releases)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-Support_this_project-F16061?logo=ko-fi&logoColor=white)](https://ko-fi.com/wizz666)
 
 **[🇸🇪 Svenska → README.sv.md](README.sv.md)**
 
-An Anthropic-compatible API proxy built into Home Assistant. Point **Claude Code CLI** (or any Anthropic SDK client) at your Home Assistant instance and use any of OpenRouter's 300+ models — including free ones. Now includes a **built-in browser terminal** so you can run Claude Code directly from your HA dashboard.
+An Anthropic-compatible API proxy built into Home Assistant. Point **Claude Code CLI** at your Home Assistant instance and use any of OpenRouter's 300+ models — including free ones — through a **built-in browser terminal** or from any machine on your network.
 
 ---
 
 ## What this does
 
-Claude Code CLI talks Anthropic's API protocol. OpenRouter speaks OpenAI's protocol. This integration bridges the two — running entirely inside Home Assistant, no extra server needed.
+Claude Code CLI speaks Anthropic's API protocol. OpenRouter speaks OpenAI's protocol. This integration bridges the two — running entirely inside Home Assistant, no extra server or container needed.
 
 ```
 Claude Code CLI  (or built-in terminal)
     │  POST /api/openrouter_bridge/v1/messages  (Anthropic format)
     ▼
 Home Assistant – OpenRouter Bridge
-    • Anthropic tools    →  OpenAI function calling
-    • system parameter   →  messages[0].role=system
-    • Streaming SSE      →  translated in real-time
+    • Translates Anthropic → OpenAI format in real time
+    • Picks active model from HA dashboard dropdown
     │  POST https://openrouter.ai/api/v1/chat/completions
     ▼
-OpenRouter (any of 300+ models)
-    │  response translated back to Anthropic format
+OpenRouter (300+ models, including free ones)
+    │  Response translated back to Anthropic format
     ▼
 Claude Code CLI
 ```
@@ -35,16 +34,15 @@ Claude Code CLI
 
 ## Features
 
-- **Anthropic-compatible endpoint** built into HA's own HTTP server — no extra containers or ports
+- **Anthropic-compatible endpoint** built into HA's own HTTP server — no extra ports or containers
 - **Built-in browser terminal** — full xterm.js terminal running Claude Code directly in your browser
-- **One-click model switching** — change models from the HA dashboard without restarting anything
-- **Full tool use support** — Claude Code's bash executor, file editor, and all built-in tools work
-- **Streaming** — real-time token-by-token responses
-- **Model listing** — `GET /v1/models` returns all available OpenRouter models
-- **300+ models** — Claude, Gemini, GPT-4o, Llama, Mistral, DeepSeek, and many more
-- **Free models available** — several capable models at zero cost
-- **Usage sensors** — requests count, last model used, available model count
-- **Works externally** — accessible via your HA external URL (Nabu Casa or reverse proxy)
+- **One-click model switching** — change models from the HA dashboard dropdown, no restart needed
+- **`openrouter/free` auto-router** — always picks the best available free model automatically
+- **Full tool-use support** — Claude Code's bash executor, file editor, and all built-in tools work
+- **Real-time streaming** — token-by-token output
+- **Clear error messages** — shows the actual OpenRouter error (rate limit, wrong key, etc.) instead of a generic message
+- **Usage sensors** — request count, last used model, available model count
+- **Works externally** — accessible via Nabu Casa or any reverse proxy
 
 ---
 
@@ -52,7 +50,7 @@ Claude Code CLI
 
 - Home Assistant 2024.1+
 - An OpenRouter API key — free at [openrouter.ai/keys](https://openrouter.ai/keys)
-- **For the built-in terminal only:** Claude Code CLI binary copied to `/config/claude_bin` (see [Terminal Setup](#terminal-setup))
+- **For the built-in terminal only:** Claude Code binary copied to `/config/claude_bin` (see [Terminal Setup](#terminal-setup))
 
 ---
 
@@ -68,44 +66,37 @@ Claude Code CLI
 ### Option B – HACS (custom repository)
 
 1. In HACS → **Custom repositories** → add `https://github.com/wizz666/homeassistant-openrouter-bridge` as type **Integration**
-2. Search for **OpenRouter Bridge** and install
-3. Restart Home Assistant
-4. Add the integration via **Settings → Devices & Services**
+2. Install **OpenRouter Bridge** and restart Home Assistant
+3. Add the integration via **Settings → Devices & Services**
 
 ---
 
 ## Configuration
 
-During setup (or via **Configure** in the integration card) you set:
-
-| Field | Description |
-|-------|-------------|
-| **OpenRouter API Key** | Your `sk-or-v1-...` key from openrouter.ai/keys |
-
-That's it. The model is controlled from the dashboard (see below), not baked into the config.
+When adding the integration, enter only your OpenRouter API key (`sk-or-v1-...`). The active model is controlled from the dashboard, not from the config.
 
 ---
 
-## Dashboard & Model Selector (Optional but Recommended)
+## Dashboard & Model Selector (Recommended)
 
-The `extras/` folder contains two files that add a proper dashboard with model selector and terminal button.
+The `extras/` folder contains ready-to-use YAML files that add a full dashboard with model selector and terminal button.
 
-### 1 – Add the package (input helpers)
+### Step 1 — Add the package file
 
-Copy `extras/package_openrouter_bridge.yaml` to your HA `packages/` folder (create it if it doesn't exist), then add to `configuration.yaml`:
+Copy `extras/package_openrouter_bridge.yaml` to your `packages/` folder (create it if needed), then add to `configuration.yaml`:
 
 ```yaml
 homeassistant:
   packages: !include_dir_named packages
 ```
 
-This creates:
-- `input_select.openrouter_bridge_model` — dropdown to pick the active model
-- `input_text.openrouter_bridge_workspace` — the working directory for terminal sessions
+This creates two input helpers:
+- `input_select.openrouter_bridge_model` — dropdown to select the active model
+- `input_text.openrouter_bridge_workspace` — working directory for terminal sessions
 
-### 2 – Add the dashboard
+### Step 2 — Add the dashboard
 
-Copy `extras/dashboard_openrouter_bridge.yaml` to your HA `dashboards/` folder, then add to `configuration.yaml`:
+Copy `extras/dashboard_openrouter_bridge.yaml` to your `dashboards/` folder, then add to `configuration.yaml`:
 
 ```yaml
 lovelace:
@@ -119,85 +110,95 @@ lovelace:
       require_admin: false
 ```
 
-Restart Home Assistant. A new **OpenRouter Bridge** entry appears in the sidebar.
-
-### Dashboard overview
-
-The dashboard contains:
-- **Status row** — live sensors: proxy status, request count, available models, last used model
-- **Model selector** — `input_select` dropdown to pick any of the pre-configured models
-- **Workspace field** — directory Claude Code uses as its working folder (default: `/config/claude_workspace`)
-- **Open Terminal** button — opens the built-in Claude terminal in a new tab
-- **Quick links** — OpenRouter Activity, Credits, Keys, Models
-- **API endpoint reference**
+Restart Home Assistant. **OpenRouter Bridge** appears in the sidebar.
 
 ---
 
 ## Choosing a Model
 
-The active model is controlled by `input_select.openrouter_bridge_model`. Change it in the dashboard and the next request automatically uses the new model — no restart needed.
+The active model is set by the `input_select.openrouter_bridge_model` dropdown in the dashboard. Change it anytime — the next request uses the new model immediately, no restart needed.
 
-The bridge sends `--model <selected>` to Claude Code in the terminal and forwards the model ID in the API request header to OpenRouter.
+> **Always open a new terminal session after switching models** so the `--model` flag passed to Claude Code matches the selected model.
 
-### Pre-configured models (edit `package_openrouter_bridge.yaml` to add more)
+### Free Models
 
-**Free models** (no OpenRouter credits needed):
+Free models require no OpenRouter credits. They are hosted by OpenRouter on shared infrastructure, so they can occasionally be **temporarily rate-limited** (HTTP 429) during peak hours — this is normal and resolves on its own. The solution is to use `openrouter/free` which automatically picks whichever free model has capacity right now.
 
 | Model ID | Notes |
 |----------|-------|
-| `meta-llama/llama-3.3-70b-instruct:free` | Best free option — fast and highly capable |
-| `google/gemma-3-27b-it:free` | Google's open model |
-| `deepseek/deepseek-r1:free` | Strong reasoning, good for complex tasks |
-| `mistralai/mistral-7b-instruct:free` | Lightweight and very fast |
+| **`openrouter/free`** | **Recommended — auto-selects the best available free model** |
+| `meta-llama/llama-3.3-70b-instruct:free` | Best specific free model for Claude Code |
+| `google/gemma-3-27b-it:free` | Good alternative |
+| `mistralai/mistral-small-3.1-24b-instruct:free` | Fast and lightweight |
+| `nousresearch/hermes-3-llama-3.1-405b:free` | Strong tool-use model |
 
-**Paid models** (best Claude Code experience):
+> ⚠️ **Important:** Claude Code requires **tool-use support** in the model (it uses bash, file editing, etc. via function calling). Reasoning models like DeepSeek R1 and o1 do **not** support tool use and will fail. Always use instruct or chat variants.
+
+### Paid Models
+
+Paid models require OpenRouter credits ([openrouter.ai/credits](https://openrouter.ai/credits)). Even $5 lasts a long time with efficient models.
 
 | Model ID | Notes |
 |----------|-------|
 | `anthropic/claude-3.5-sonnet` | Best overall for Claude Code |
-| `anthropic/claude-3.5-haiku` | Fast and affordable |
-| `anthropic/claude-opus-4` | Most capable, higher cost |
-| `google/gemini-2.0-flash-001` | Fast and cheap |
+| `anthropic/claude-3.5-haiku` | Fast and cost-effective |
+| `anthropic/claude-3-opus` | Most capable Claude 3 model |
+| `google/gemini-2.0-flash-001` | Fast and very affordable |
+| `google/gemini-2.5-pro-preview-03-25` | Latest Gemini, high capability |
 | `openai/gpt-4o` | OpenAI flagship |
 | `openai/gpt-4o-mini` | Affordable GPT-4 class |
-| `deepseek/deepseek-r1` | Excellent reasoning, very affordable |
+| `meta-llama/llama-3.3-70b-instruct` | Best open-source paid option |
+| `deepseek/deepseek-chat-v3-0324` | Excellent reasoning, very affordable |
 
-To add any model from OpenRouter's catalog, find its ID at [openrouter.ai/models](https://openrouter.ai/models) and add it to the `options:` list in `package_openrouter_bridge.yaml`.
+To add any model from OpenRouter's full catalog, find its ID at [openrouter.ai/models](https://openrouter.ai/models) and add it to `extras/package_openrouter_bridge.yaml`.
+
+---
+
+## Free Tier Rate Limits
+
+OpenRouter's free tier has these limits:
+
+| Condition | Requests/day |
+|-----------|-------------|
+| No credits ever added | ~50 req/day |
+| At least some credits added | ~200 req/day |
+| Account balance negative | 0 — HTTP 402 even for free models |
+
+Claude Code can generate many requests in a single session (each tool call is a request). If you hit the daily limit, either wait until the next day or add a small credit balance.
+
+The `openrouter/free` router selects from whichever free model **is not currently rate-limited**, so it provides the best chance of getting a response even during peak hours.
 
 ---
 
 ## Built-in Terminal
 
-The integration includes a full browser-based terminal powered by [xterm.js](https://xtermjs.org/). Click **Open Terminal** on the dashboard and Claude Code starts immediately — the correct model is passed automatically, no shell configuration needed.
+Click **Open Terminal** on the dashboard and Claude Code starts immediately in your browser — the selected model is passed automatically, no shell configuration needed.
 
 ### How it works
 
 ```
-Browser (xterm.js) ←──WebSocket──→ HA WebSocket handler ←──PTY──→ claude_bin
+Browser (xterm.js) ←── WebSocket ──→ HA PTY handler ←── PTY ──→ /config/claude_bin
 ```
 
-- The browser connects via WebSocket to `/api/openrouter_bridge/terminal/ws`
-- HA spawns `claude_bin` in a PTY (pseudo-terminal) with the correct environment
-- All keystrokes go through the WebSocket to the PTY; all output comes back the same way
-- Terminal resize events (including window resize) are forwarded to the PTY in real time
-- The active model from `input_select.openrouter_bridge_model` is passed as `--model <id>`
+- A WebSocket connects to `/api/openrouter_bridge/terminal/ws`
+- HA spawns the Claude Code binary in a PTY with the correct environment
+- All keystrokes and output flow through the WebSocket in real time
+- Terminal resize is forwarded to the PTY automatically
+- The active model from `input_select.openrouter_bridge_model` is passed as `--model`
 - The workspace from `input_text.openrouter_bridge_workspace` is the working directory
 
 ### Terminal Setup
 
-The terminal requires the Claude Code binary to be available inside the HA core container. Since Claude Code runs in a separate add-on container, you need to copy the binary to the shared `/config/` volume once:
+The terminal requires the Claude Code binary inside the HA core container. Since Claude Code runs in a separate add-on container, copy it to the shared `/config/` volume once:
 
-**Step 1 — Find the binary in the Claude Code add-on:**
-
-Open a terminal in the Claude Code add-on (VS Code Server, SSH, etc.) and run:
+**Step 1 — Find the binary (in the Claude Code add-on terminal):**
 
 ```bash
 which claude
-# typically: /root/.local/share/claude/versions/<version>/claude
-# or: /usr/local/bin/claude
+# e.g. /root/.local/share/claude/versions/2.x.x/claude
 ```
 
-**Step 2 — Copy it to the shared volume:**
+**Step 2 — Copy to shared volume:**
 
 ```bash
 cp $(which claude) /config/claude_bin
@@ -210,34 +211,26 @@ chmod +x /config/claude_bin
 /config/claude_bin --version
 ```
 
-The terminal will then find it automatically at `/config/claude_bin`.
+> Repeat step 2 whenever you update Claude Code.
 
-> **Note:** When you update Claude Code, repeat step 2 to keep the binary current.
-
-### Environment variables set by the terminal
-
-The terminal automatically sets these when launching Claude Code:
+### Environment variables set automatically
 
 | Variable | Value | Purpose |
 |----------|-------|---------|
-| `ANTHROPIC_BASE_URL` | `http(s)://<your-ha-host>/api/openrouter_bridge` | Points Claude at the proxy |
-| `ANTHROPIC_AUTH_TOKEN` | Your OpenRouter API key from the config entry | Authentication to OpenRouter |
-| `ANTHROPIC_API_KEY` | `""` (empty) | Required to be empty per OpenRouter docs |
-| `TERM` | `xterm-256color` | Full color terminal support |
-
-No manual environment setup needed — everything is configured automatically.
+| `ANTHROPIC_BASE_URL` | `http(s)://<your-ha>/api/openrouter_bridge` | Points Claude at the proxy |
+| `ANTHROPIC_AUTH_TOKEN` | Your OpenRouter API key | Authentication |
+| `ANTHROPIC_API_KEY` | `""` (empty) | Required empty per OpenRouter docs |
+| `TERM` | `xterm-256color` | Full color terminal |
 
 ### Workspace
 
-The working directory for terminal sessions is set by `input_text.openrouter_bridge_workspace` (default: `/config/claude_workspace`). Create any directory you like and set it here. Each session starts in that directory.
-
-A `CLAUDE.md` file in the workspace directory will be picked up by Claude Code as project instructions. The default workspace includes a minimal `CLAUDE.md` to prevent HA's root `/config/CLAUDE.md` from being loaded.
+The working directory for terminal sessions is set by `input_text.openrouter_bridge_workspace` (default: `/config/claude_workspace`). Create any directory and set it here. A `CLAUDE.md` file in the workspace is loaded as project instructions.
 
 ---
 
-## Claude Code Setup (External Machine)
+## External Machine Setup
 
-To use the proxy from any machine on your network (not via the built-in terminal):
+To use the proxy from any machine on your network:
 
 ```bash
 export ANTHROPIC_BASE_URL=http://<your-ha-ip>:8123/api/openrouter_bridge
@@ -255,30 +248,27 @@ export ANTHROPIC_AUTH_TOKEN=sk-or-v1-your-openrouter-key
 export ANTHROPIC_API_KEY=
 ```
 
-> **Note:** Use `ANTHROPIC_AUTH_TOKEN` (not `ANTHROPIC_API_KEY`) for OpenRouter per their [documentation](https://openrouter.ai/docs).
+> Use `ANTHROPIC_AUTH_TOKEN`, not `ANTHROPIC_API_KEY`, per [OpenRouter docs](https://openrouter.ai/docs).
 
-**Verify the proxy is running:**
+**Verify:**
 ```bash
 curl http://<ha-ip>:8123/api/openrouter_bridge
-```
-Expected response:
-```json
-{"status": "ok", "model": "meta-llama/llama-3.3-70b-instruct:free", "requests": 0}
+# → {"status": "ok", "default_model": "...", "total_requests": 0}
 ```
 
 ---
 
 ## API Endpoints
 
-| Endpoint | Method | Auth required | Description |
-|----------|--------|---------------|-------------|
-| `/api/openrouter_bridge` | GET | No | Status, current model, request count |
-| `/api/openrouter_bridge/v1/messages` | POST | No | Anthropic Messages API proxy |
-| `/api/openrouter_bridge/v1/models` | GET | No | All available OpenRouter models |
-| `/api/openrouter_bridge/terminal` | GET | No | Built-in terminal HTML page |
-| `/api/openrouter_bridge/terminal/ws` | WS | No | Terminal WebSocket backend |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/openrouter_bridge` | GET | Status, current model, request count |
+| `/api/openrouter_bridge/v1/messages` | POST | Anthropic Messages API proxy |
+| `/api/openrouter_bridge/v1/models` | GET | All available OpenRouter models |
+| `/api/openrouter_bridge/terminal` | GET | Built-in terminal HTML page |
+| `/api/openrouter_bridge/terminal/ws` | WS | Terminal WebSocket backend |
 
-All endpoints are unauthenticated by design — they sit behind your HA network perimeter. If exposing externally, use a VPN or ensure Nabu Casa/reverse proxy handles access control.
+All endpoints are unauthenticated — they sit behind your HA network. Use a VPN or ensure your reverse proxy handles access control if exposing externally.
 
 ---
 
@@ -288,46 +278,32 @@ All endpoints are unauthenticated by design — they sit behind your HA network 
 |--------|-------------|
 | `sensor.openrouter_bridge_status` | `ok` / `invalid_key` / `unconfigured` |
 | `sensor.openrouter_bridge_total_requests` | Requests proxied this session |
-| `sensor.openrouter_bridge_available_models` | Number of models available on OpenRouter |
-| `sensor.openrouter_bridge_last_used_model` | Model ID used in the last request |
-
----
-
-## How the Protocol Translation Works
-
-**Anthropic → OpenAI (request):**
-- `system` parameter → first message with `role: "system"`
-- `tools[].input_schema` → `tools[].function.parameters`
-- `tool_use` content blocks → `tool_calls` array
-- `tool_result` blocks → messages with `role: "tool"`
-- `tool_choice: "any"` → `"required"`
-
-**OpenAI → Anthropic (response):**
-- `choices[0].message.content` → `content[{type: "text"}]`
-- `tool_calls` → `content[{type: "tool_use"}]`
-- `finish_reason: "stop"` → `stop_reason: "end_turn"`
-- `finish_reason: "tool_calls"` → `stop_reason: "tool_use"`
-- `usage.prompt_tokens` → `usage.input_tokens`
-
-Streaming responses are translated event-by-event from OpenAI SSE format to Anthropic SSE format.
+| `sensor.openrouter_bridge_available_models` | Number of models on OpenRouter |
+| `sensor.openrouter_bridge_last_used_model` | Model used in the last request |
 
 ---
 
 ## Troubleshooting
 
-**Terminal shows "❌ Kunde inte starta claude"**
-→ The binary is missing. Follow [Terminal Setup](#terminal-setup) to copy it to `/config/claude_bin`.
+**"❌ Kunde inte starta claude" in terminal**
+→ Binary missing. Follow [Terminal Setup](#terminal-setup) to copy it to `/config/claude_bin`.
 
-**Terminal connects but Claude shows wrong model**
-→ Check `input_select.openrouter_bridge_model` in the dashboard. The displayed model should match what you selected.
+**`[OpenRouter 429] temporarily rate-limited upstream`**
+→ The specific free model is overloaded right now. Switch to `openrouter/free` (auto-selects an available one) or try again in a few minutes.
 
-**"Invalid API key" on integration setup**
-→ Make sure you're using an OpenRouter key (`sk-or-v1-...`), not an Anthropic key.
+**`[OpenRouter 402] insufficient credits`**
+→ Your account balance is negative. Add credits at [openrouter.ai/credits](https://openrouter.ai/credits) or use only free models with a positive balance.
 
-**Requests succeed but I get generic/unexpected responses**
-→ Some free models have limited context windows or instruction-following. Try a different model, or switch to a paid one like `anthropic/claude-3.5-sonnet`.
+**"API error" or model not responding**
+→ Some free models have limited tool-use support. Stick to `openrouter/free` or `meta-llama/llama-3.3-70b-instruct:free` for best results.
 
-**The proxy status sensor shows `invalid_key` after setup**
+**Model switch doesn't seem to take effect**
+→ Open a **new terminal session** after changing the dropdown. The model is passed as `--model` at startup.
+
+**Terminal connects but no response from Claude**
+→ Run `/status` inside Claude Code to verify `ANTHROPIC_BASE_URL` and auth token. Run `/logout` if you were previously logged in with Anthropic credentials.
+
+**`invalid_key` sensor after setup**
 → Re-enter your key via **Settings → Devices & Services → OpenRouter Bridge → Configure**.
 
 ---
