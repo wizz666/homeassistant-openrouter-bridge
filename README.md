@@ -189,9 +189,9 @@ Browser (xterm.js) ←── WebSocket ──→ HA PTY handler ←── PTY �
 
 ### Terminal Setup
 
-The terminal requires the Claude Code binary inside the HA core container. Since Claude Code runs in a separate add-on container, copy it to the shared `/config/` volume once:
+The terminal requires the Claude Code binary inside the HA core container. Since Claude Code runs in a separate app container, copy it to the shared `/config/` volume once:
 
-**Step 1 — Find the binary (in the Claude Code add-on terminal):**
+**Step 1 — Find the binary (in the Claude Code app terminal):**
 
 ```bash
 which claude
