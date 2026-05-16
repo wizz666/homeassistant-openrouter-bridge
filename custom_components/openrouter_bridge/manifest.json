@@ -2,13 +2,17 @@
   "domain": "openrouter_bridge",
   "name": "OpenRouter Bridge",
   "after_dependencies": [],
-  "codeowners": ["@wizz666"],
+  "codeowners": [
+    "@wizz666"
+  ],
   "config_flow": true,
-  "dependencies": ["http"],
+  "dependencies": [
+    "http"
+  ],
   "documentation": "https://github.com/wizz666/homeassistant-openrouter-bridge",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/wizz666/homeassistant-openrouter-bridge/issues",
   "requirements": [],
-  "version": "1.0.1"
+  "version": "1.0.2"
 }
