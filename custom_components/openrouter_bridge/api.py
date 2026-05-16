@@ -427,7 +427,7 @@ class OpenRouterMessagesView(HomeAssistantView):
 
     url = "/api/openrouter_bridge/v1/messages"
     name = "api:openrouter_bridge:messages"
-    requires_auth = False
+    requires_auth = True
     cors_allowed = True
 
     def __init__(self, hass: HomeAssistant) -> None:  # noqa: D107
@@ -586,7 +586,7 @@ class OpenRouterModelsView(HomeAssistantView):
 
     url = "/api/openrouter_bridge/v1/models"
     name = "api:openrouter_bridge:models"
-    requires_auth = False
+    requires_auth = True
     cors_allowed = True
 
     def __init__(self, hass: HomeAssistant) -> None:  # noqa: D107
@@ -636,7 +636,7 @@ class OpenRouterHealthView(HomeAssistantView):
 
     url = "/api/openrouter_bridge"
     name = "api:openrouter_bridge:health"
-    requires_auth = False
+    requires_auth = True
     cors_allowed = True
 
     def __init__(self, hass: HomeAssistant) -> None:  # noqa: D107
